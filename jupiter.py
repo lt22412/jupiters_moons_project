@@ -239,6 +239,3 @@ class Moons:
         plt.show()
 
 
-obj1=Moons('jupiter.db')
-
-print(obj1.feature_box_plots())
