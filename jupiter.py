@@ -22,7 +22,7 @@ class Moons: #attributes: data (input dataset), feature_dictionary(off by defaul
         #    self.data=self.data.drop(['group'], axis=1)# drop the word group name column as we have the group_to_number dictionary attached if we need to recall the group name from its number.
 
         
-    def numerical_categorical_mapping(self, feature):
+    def numerical_categorical_mapping(self, feature):# This is a more universal version of the method create_group_mapping. It can be applied to any categorical feature thus it is better.
 
         """ Create and apply a mapping for a categorical literal feature to numbers. """
 
@@ -38,7 +38,7 @@ class Moons: #attributes: data (input dataset), feature_dictionary(off by defaul
         
         dictionary_attribute_name=feature+'_dictionary'
 
-        setattr(self,dictionary_attribute_name,dict)# add an attribute with name feature_number that holds dictionary so we know what numbers in new numerical feature mean.
+        setattr(self,dictionary_attribute_name,dict)# add an attribute with name feature_number(feature is the name of the feature) that holds dictionary so we know what numbers in new numerical feature mean.
 
         # Replace feature names with numbers in the dataset
         self.data[feature] = self.data[feature].map(getattr(self, dictionary_attribute_name))
@@ -47,7 +47,7 @@ class Moons: #attributes: data (input dataset), feature_dictionary(off by defaul
         return
 
     """
-    def create_group_mapping(self):
+    def create_group_mapping(self):# the purpose of this method is to convert 'group' area column from words to numbers and add a dictionary as an attribute to remember what is what.
 
         
         #Create and apply a mapping from group names to numbers. 
