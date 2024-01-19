@@ -5,7 +5,7 @@ import seaborn as sns
 import numpy as np
 
 
-class Moons:
+class Moons: #attributes: data (input dataset), feature_dictionary(off by default. It appears when we change categorical feature into numerical, see function below).
 
     def __init__(self, path_to_db):
 
@@ -17,17 +17,45 @@ class Moons:
         
         self.data = df_0
         self.data=self.data.set_index('moon')
+        #if 'group' in self.data.columns:
+        #    self.create_group_mapping()# moving groups to numbers (treating groups as numbers is more effective further)
+        #    self.data=self.data.drop(['group'], axis=1)# drop the word group name column as we have the group_to_number dictionary attached if we need to recall the group name from its number.
 
-        self.create_group_mapping()# moving groups to numbers (treating groups as numbers is more effective further)
         
-        self.data=self.data.drop(['group'], axis=1)# drop the word group name column as we have the group_to_number dictionary attached if we need to recall the group name from its number.
+    def numerical_categorical_mapping(self, feature):
 
+        """ Create and apply a mapping for a categorical literal feature to numbers. """
+
+        if feature not in self.data.columns:
+            print("This feature is not found in the dataset")
+            return
         
 
+        feature_numerical_name=feature+'_number'
+        if feature_numerical_name in self.data.columns:
+            print("This feature is already numerical in the dataset")
+            return
+        
+        unique_examples = self.data[feature].unique()
+        
+        dict = {group: i for i, group in enumerate(unique_examples)}
+        
+        dictionary_attribute_name=feature+'_dictionary'
 
+        setattr(self,dictionary_attribute_name,dict)# add an attribute with name feature_number that holds dictionary so we know what numbers in new numerical feature mean.
+
+        # Replace feature names with numbers in the dataset
+        self.data[feature_numerical_name] = self.data[feature].map(getattr(self, dictionary_attribute_name))
+        self.data=self.data.drop(feature, axis=1)
+
+        return
+
+    """
     def create_group_mapping(self):
 
-        """ Create and apply a mapping from group names to numbers. """
+        
+        #Create and apply a mapping from group names to numbers. 
+        
         
         if 'group_number' in self.data.columns.tolist():
             print("Group number is already a feature in the dataset")
@@ -40,6 +68,7 @@ class Moons:
         self.data['group_number'] = self.data['group'].map(self.group_to_number)
 
         return
+    """
 
 
 
@@ -63,8 +92,14 @@ class Moons:
     
     def get_moon_data(self, moon_name):
         """ Return data for a specific moon. """
-        return self.data.loc[moon_name]
+        if moon_name in self.data.columns:
+            return self.data.loc[moon_name]
+        else:
+            print('moon not found')
+            return None
 
+    def get_feature_types(self):
+        return self.data.dtypes.apply(lambda x: x.name).to_dict()
 
    
 
@@ -182,9 +217,7 @@ class Moons:
     
             # Plot the histogram
             
-            if feature== "group":
-                continue  #this is due to it being broken and unnecessary. group_number is the same but sorted and more informative.
-
+            
             if feature == "group_number":
 
                 ax.hist(self.data[feature],bins=7, color='blue', edgecolor='black')
@@ -222,9 +255,7 @@ class Moons:
 
         for i, feature in enumerate(feature_names):
             
-            if feature== "group":
-                continue  #this is due to it being broken and unnecessary. group_number is the same but sorted and more informative.
-
+            
             ax = axes[i]
     
             # Draw the box plot using seaborn
@@ -239,3 +270,4 @@ class Moons:
         plt.show()
 
 
+#a=Moons('jupiter.db')
