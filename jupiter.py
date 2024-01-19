@@ -31,10 +31,6 @@ class Moons: #attributes: data (input dataset), feature_dictionary(off by defaul
             return
         
 
-        feature_numerical_name=feature+'_number'
-        if feature_numerical_name in self.data.columns:
-            print("This feature is already numerical in the dataset")
-            return
         
         unique_examples = self.data[feature].unique()
         
@@ -45,8 +41,8 @@ class Moons: #attributes: data (input dataset), feature_dictionary(off by defaul
         setattr(self,dictionary_attribute_name,dict)# add an attribute with name feature_number that holds dictionary so we know what numbers in new numerical feature mean.
 
         # Replace feature names with numbers in the dataset
-        self.data[feature_numerical_name] = self.data[feature].map(getattr(self, dictionary_attribute_name))
-        self.data=self.data.drop(feature, axis=1)
+        self.data[feature] = self.data[feature].map(getattr(self, dictionary_attribute_name))
+        
 
         return
 
@@ -92,7 +88,7 @@ class Moons: #attributes: data (input dataset), feature_dictionary(off by defaul
     
     def get_moon_data(self, moon_name):
         """ Return data for a specific moon. """
-        if moon_name in self.data.columns:
+        if moon_name in self.data.index:
             return self.data.loc[moon_name]
         else:
             print('moon not found')
@@ -140,7 +136,6 @@ class Moons: #attributes: data (input dataset), feature_dictionary(off by defaul
         pd.DataFrame: A DataFrame representing the correlation matrix.
         """
         
-        
         # Select only numerical columns for correlation matrix
         numeric_cols = self.data.select_dtypes(include=['number']).columns
         needed_data= self.data[numeric_cols]
@@ -153,7 +148,7 @@ class Moons: #attributes: data (input dataset), feature_dictionary(off by defaul
 
         return correlation_matrix
     
-    def visualise_corr(self,axis='col'):
+    def visualise_corr(self,axis='col',size=13):
         
         corr_matrix=self.calculate_correlation_matrix(axis)
         
@@ -164,7 +159,7 @@ class Moons: #attributes: data (input dataset), feature_dictionary(off by defaul
             statement='Moons correlation Matrix'
 
         mask = np.triu(np.ones_like(corr_matrix, dtype=bool),k=1)
-        plt.figure(figsize=(20, 20))
+        plt.figure(figsize=(size, size))
 
         
         sns.heatmap(corr_matrix, 
@@ -177,10 +172,6 @@ class Moons: #attributes: data (input dataset), feature_dictionary(off by defaul
             cbar_kws={"shrink": .75, "label": "Correlation Value"},
             ) 
 
-
-
-        
-
         plt.title(statement)
 
         # Display the plot
@@ -190,6 +181,9 @@ class Moons: #attributes: data (input dataset), feature_dictionary(off by defaul
 
     def plot_distribution(self, column):
         """ Plot distribution of a specified column. """
+        if column not in self.data.columns:
+            print('No such column')
+            return
         self.data[column].hist()
         plt.title(f'Distribution of {column}')
         plt.xlabel(column)
@@ -270,4 +264,6 @@ class Moons: #attributes: data (input dataset), feature_dictionary(off by defaul
         plt.show()
 
 
-#a=Moons('jupiter.db')
+a=Moons('jupiter.db')
+a.numerical_categorical_mapping('group')
+print(a.group_dictionary)
