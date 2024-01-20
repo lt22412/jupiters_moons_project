@@ -21,31 +21,6 @@ class Moons: #attributes: data (input dataset), feature_dictionary(off by defaul
         #    self.create_group_mapping()# moving groups to numbers (treating groups as numbers is more effective further)
         #    self.data=self.data.drop(['group'], axis=1)# drop the word group name column as we have the group_to_number dictionary attached if we need to recall the group name from its number.
 
-        
-    def numerical_categorical_mapping(self, feature):# This is a more universal version of the method create_group_mapping. It can be applied to any categorical feature thus it is better.
-
-        """ Create and apply a mapping for a categorical literal feature to numbers. """
-
-        if feature not in self.data.columns:
-            print("This feature is not found in the dataset")
-            return
-        
-
-        
-        unique_examples = self.data[feature].unique()
-        
-        dict = {group: i for i, group in enumerate(unique_examples)}
-        
-        dictionary_attribute_name=feature+'_dictionary'
-
-        setattr(self,dictionary_attribute_name,dict)# add an attribute with name feature_number(feature is the name of the feature) that holds dictionary so we know what numbers in new numerical feature mean.
-
-        # Replace feature names with numbers in the dataset
-        self.data[feature] = self.data[feature].map(getattr(self, dictionary_attribute_name))
-        
-
-        return
-
     """
     def create_group_mapping(self):# the purpose of this method is to convert 'group' area column from words to numbers and add a dictionary as an attribute to remember what is what.
 
@@ -65,14 +40,34 @@ class Moons: #attributes: data (input dataset), feature_dictionary(off by defaul
 
         return
     """
+ 
+    def numerical_categorical_mapping(self, feature):# This is a more universal version of the method create_group_mapping above. It can be applied to any categorical feature thus it is better.
 
+        """ Create and apply a mapping for a categorical literal feature to numbers. """
 
+        if feature not in self.data.columns:
+            print("This feature is not found in the dataset")
+            return
+        
+        unique_examples = self.data[feature].unique()
+        
+        dict = {group: i for i, group in enumerate(unique_examples)}
+        
+        dictionary_attribute_name=feature+'_dictionary'
+
+        setattr(self,dictionary_attribute_name,dict)# add an attribute with name feature_number(feature is the name of the feature) that holds dictionary so we know what numbers in new numerical feature mean.
+
+        # Replace feature names with numbers in the dataset
+        self.data[feature]=self.data[feature].map(getattr(self,dictionary_attribute_name))
+        
+
+        return
 
     def summary_statistics(self):
+
         """ Return summary statistics of the dataset. """
         return self.data.describe()
-
-
+    
     def get_features(self):
         """ Return the names of all columns in the dataset. """
         return self.data.columns.tolist()
@@ -97,8 +92,6 @@ class Moons: #attributes: data (input dataset), feature_dictionary(off by defaul
     def get_feature_types(self):
         return self.data.dtypes.apply(lambda x: x.name).to_dict()
 
-   
-
     def count_missing_values(self, axis='col'):
         """
         Count missing values in the dataset.
@@ -121,8 +114,6 @@ class Moons: #attributes: data (input dataset), feature_dictionary(off by defaul
                 missing_values_dict[row] = self.data.loc[row].isnull().sum()
 
         return missing_values_dict
-    
-    
     
     def calculate_correlation_matrix(self, axis='col'):
         """
@@ -212,7 +203,7 @@ class Moons: #attributes: data (input dataset), feature_dictionary(off by defaul
             # Plot the histogram
             
             
-            if feature == "group_number":
+            if feature == "group":
 
                 ax.hist(self.data[feature],bins=7, color='blue', edgecolor='black')
                 ax.set_title(f'{feature}')
@@ -227,8 +218,49 @@ class Moons: #attributes: data (input dataset), feature_dictionary(off by defaul
         plt.tight_layout()
         # Show the plot
         plt.show()
+
+    def feature_histograms_by_groups(self):
+        n_rows = 2
+        n_cols = 4
+
+
+        # Create a figure and a grid of subplots
+        fig, axes = plt.subplots(n_rows, n_cols, figsize=(20, 10))  # Adjust the figure size as needed
         
 
+        # Flatten the axes array for easy iteration
+        axes = axes.flatten()
+
+        # List of your dataset's feature names
+        feature_names = self.data.columns.tolist()
+        # Loop through the features and create a histogram for each
+        # Manually specify colors for each group
+        colors = ['blue', 'green', 'red', 'cyan', 'magenta', 'yellow', 'black', 'orange', 'purple', 'brown', 'pink']
+
+        df=self.data
+        df['mass_kg'] = np.log1p(self.data['mass_kg'])
+
+        for i, feature in enumerate(feature_names):
+            # Select the axis where the histogram will be plotted
+            ax = axes[i]
+            
+            if feature=='mass_kg':
+                continue
+
+            # Plot the histogram
+            for j in range(0,8):
+                ax.hist(self.data[self.data.group==j][feature], color=colors[j], edgecolor='black', alpha=0.7, label=j)
+            
+
+            # Set the title with the feature name
+            ax.set_title(f'{feature}')
+            
+
+        # Adjust the layout so titles and labels don't overlap
+        plt.tight_layout()
+        # Show the plot
+        plt.show()
+  
     def feature_box_plots(self):
         n_rows = 2
         n_cols = 4
@@ -264,6 +296,8 @@ class Moons: #attributes: data (input dataset), feature_dictionary(off by defaul
         plt.show()
 
 
-a=Moons('jupiter.db')
-a.numerical_categorical_mapping('group')
-print(a.group_dictionary)
+#a=Moons('jupiter.db')#little testing going on here
+#a.numerical_categorical_mapping('group')
+#print(a.data[a.data.group==1]['period_days'].head())
+#a.feature_histograms_by_groups()
+#print(a.group_dictionary)
