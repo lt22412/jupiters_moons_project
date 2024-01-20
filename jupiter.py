@@ -295,9 +295,36 @@ class Moons: #attributes: data (input dataset), feature_dictionary(off by defaul
         # Show the plot
         plt.show()
 
+    def plot_columns(self, column1, column2, use_group=False):
+        df=self.data
+        # Check if columns exist and are numerical
+        if column1 in df.columns and column2 in df.columns and \
+            pd.api.types.is_numeric_dtype(df[column1]) and \
+            pd.api.types.is_numeric_dtype(df[column2]):
+
+            plt.figure(figsize=(8, 6))
+            
+
+            if use_group and 'group' in df.columns:
+                groups=df.groupby('group')
+                for name, group in groups:
+                    plt.scatter(group[column1], group[column2], alpha=0.5, label=name)
+                    plt.legend()
+            else:
+                plt.scatter(df[column1], df[column2], alpha=0.5)
+
+
+            plt.title(f'{column1} vs. {column2}')
+            plt.xlabel(column1)
+            plt.ylabel(column2)
+            plt.grid(True)
+            plt.show()
+        else:
+            print(f"Error: One or both columns are either not in the DataFrame or not numerical.")
+
 
 #a=Moons('jupiter.db')#little testing going on here
 #a.numerical_categorical_mapping('group')
 #print(a.data[a.data.group==1]['period_days'].head())
-#a.feature_histograms_by_groups()
+#a.plot_columns('distance_km','mag',use_group=True)
 #print(a.group_dictionary)
