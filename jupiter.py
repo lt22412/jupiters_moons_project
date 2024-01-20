@@ -5,6 +5,8 @@ import seaborn as sns
 import numpy as np
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import cross_val_score
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_squared_error, r2_score
 
 class Moons: #attributes: data (input dataset), feature_dictionary(off by default. It appears when we change categorical feature into numerical, see function below).
 
@@ -331,18 +333,25 @@ class Moons: #attributes: data (input dataset), feature_dictionary(off by defaul
 
         # Train a linear regression model
         model = LinearRegression()
-        model.fit(train_df[[column1]], train_df[column2])
+        model.fit(train_df[column1], train_df[column2])
 
         # Predict the missing values in column1
-        predicted_values = model.predict(predict_df[[column1]])
+        predicted_values = model.predict(predict_df[column1])
 
         # Fill in the missing values in the original DataFrame
         self.data.loc[self.data[column2].isna(), column2] = predicted_values
 
+        train_predictions = model.predict(train_df[column1])
+        r2 = r2_score(train_df[column2], train_predictions)
+        rmse = np.sqrt(mean_squared_error(train_df[column2], train_predictions))
+
+        return [r2,rmse]
+    
+
 #a=Moons('jupiter.db')#little testing going on here
 #a.numerical_categorical_mapping('group')
 #print(a.data[a.data.group==1]['period_days'].head())
-#a.linreg_subs('radius_km','mag')
+#print(a.linreg_subs(['radius_km'],'mag'))
 
 #print(a.data [a.data['group']==0])
 #print(a.group_dictionary)
