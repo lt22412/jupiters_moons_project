@@ -4,7 +4,6 @@ import sqlite3
 import seaborn as sns
 import numpy as np
 from sklearn.linear_model import LinearRegression
-from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error, r2_score
 
@@ -45,6 +44,9 @@ class Moons: #attributes: data (input dataset), feature_dictionary(off by defaul
     def get_features(self):#Return the names of all columns in the dataset.
         return self.data.columns.tolist()
     
+    def get_feature_data(self, feature):# Return a dataframe with one feature from the dataset. feature: string
+        return self.data[[feature]]
+
     def get_moons(self):# Return a list of moon names from the dataset. 
         return self.data.index.tolist() 
     
@@ -230,9 +232,7 @@ class Moons: #attributes: data (input dataset), feature_dictionary(off by defaul
 
     def plot_columns(self, column1, column2, use_group=False):# plot 2 columns against each other:column1,2: string, use_group: bool
         df=self.data#copy dataset for convenience
-        if column1 in df.columns and column2 in df.columns and \
-            pd.api.types.is_numeric_dtype(df[column1]) and \
-            pd.api.types.is_numeric_dtype(df[column2]):# Check if both features are numerical
+        if column1 in df.columns and column2 in df.columns:
 
             plt.figure(figsize=(8, 6))#adjust the plot size
             
@@ -252,9 +252,9 @@ class Moons: #attributes: data (input dataset), feature_dictionary(off by defaul
             plt.grid(True)
             plt.show()# Show the Plot
         else:
-            print(f"Error: One or both columns are either not in the DataFrame or not numerical.")#return error if columns are wrong
+            print(f"Error: One or both columns are not in the DataFrame")#return error if columns are wrong
 
-    def linreg_subs(self, column1, column2):# Substitute missing values in column 2 with a linear regression predictions trained on column1 set of columns. Column1: list[strings], column2: string. 
+    def linreg_subs(self, column1, column2):# linear regression with automatic data substitution: Substitute missing values in column 2 with a linear regression predictions trained on column1 set of columns. Column1: list[strings], column2: string. 
         
         df=self.data#copy for convenience
 
@@ -277,11 +277,43 @@ class Moons: #attributes: data (input dataset), feature_dictionary(off by defaul
 
         return [r2,rmse]# Return a list with r2 and rmse of model.
     
+    def linreg_no_subs(self, column_x, column_y, show=False):# normal linear regression: build and plot a regression model based on 2 columns: x and y(strings). Show :bool.
+        df=self.data# move data to df for convenience
 
+        y=df[column_y]    
+        X=df[[column_x]]# Set predictor and result
+
+        X_train,X_test,y_train,y_test =train_test_split(X, y, test_size=0.3, random_state=42)# Split data into test and train
+
+        model=LinearRegression()
+        model.fit(X_train,y_train)# Train the model
+
+        y_pred=model.predict(X_test)#predict based on x_test data 
+
+        
+        mse=mean_squared_error(y_test, y_pred)
+        r2=r2_score(y_test, y_pred)# Calculate performance metrics
+
+        test= [r2,mse]
+        
+        y_pred=model.predict(X)
+
+        if show==True:# if true then also plot
+            plt.xlabel(column_x)
+            plt.ylabel(column_y)#set axis labels
+            plt.grid(True)#show grid
+            plt.title(f'{column_x} vs. {column_y}')# Set titles and axis names(lower)
+            plt.scatter(df[column_x], df[column_y], alpha=0.5, label='Actual data')#plot actual data
+            plt.plot(df[column_x], y_pred, color='red', alpha=0.5, label= 'Regression line')# Plotting the regression line
+            plt.legend()
+            plt.show()# Show the plot
+        
+        return [model, test, y_pred]# returns [model, list in form [r2,rmse], list of predictions based on column_x and model]
+    
 #a=Moons('jupiter.db')#little testing going on here
 #a.numerical_categorical_mapping('group')
-#print(a.data[a.data.group==1]['period_days'].head())
+#print(type(a.get_feature_data('group')))
 #print(a.linreg_subs(['radius_km'],'mag'))
-
+#a.linreg_no_subs('distance_km', 'period_days', show=True)
 #print(a.data [a.data['group']==0])
 #print(a.group_dictionary)
